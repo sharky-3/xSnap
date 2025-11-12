@@ -36,6 +36,9 @@ monitor_capture = {
 with open("coco.names", "r") as f:
     classes = [line.strip() for line in f.readlines()]
 
+# Define a flag to lock the cursor
+lock_cursor = False  # Set to False to unlock the cursor
+
 while True:
     # Capture the specified portion of the screen (centered region)
     img = sct.grab(monitor_capture)
@@ -43,7 +46,7 @@ while True:
     frame = cv2.cvtColor(img_np, cv2.COLOR_BGRA2BGR)
 
     # Prepare the image for object detection
-    blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
+    blob = cv2.dnn.blobFromImage(frame, 0.00392, (320, 320), (0, 0, 0), True, crop=False)
     net.setInput(blob)
     outs = net.forward(output_layers)
 
@@ -73,6 +76,10 @@ while True:
 
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
 
+    # Track the center of the largest detected object (if any)
+    mouse_x = None
+    mouse_y = None
+
     for i in range(len(boxes)):
         if i in indexes:
             x, y, w, h = boxes[i]
@@ -80,13 +87,21 @@ while True:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
             cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 2)
 
+            # Calculate the center of the bounding box
+            box_center_x = x + w // 2
+            box_center_y = y + h // 2
+
+            # If the cursor is locked, move it to the center of the detected object
+            if lock_cursor:
+                mouse_x = box_center_x
+                mouse_y = box_center_y
+
+    # If cursor locking is enabled and an object was detected, move the mouse
+    if lock_cursor and mouse_x is not None and mouse_y is not None:
+        pyautogui.moveTo(left + mouse_x, top + mouse_y)
+
     # Show the captured frame with object detection
     cv2.imshow('Screen Capture with Object Detection', frame)
-
-    # Move the mouse to the top-center of the capture area
-    mouse_x = left + capture_width // 2  # X-coordinate of top-center
-    mouse_y = top  # Y-coordinate is the top of the capture region
-    pyautogui.moveTo(mouse_x, mouse_y)
 
     # Exit the loop when 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):

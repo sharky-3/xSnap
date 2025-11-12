@@ -1,1 +1,1 @@
-# xSnap
+Download YOLOv3 Weights: https://pjreddie.com/media/files/yolov3.weights

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import mss
+import pyautogui  # Import pyautogui to move the mouse
 
 # Load YOLO
 net = cv2.dnn.readNet("yolov3.weights", "yolov3.cfg")
@@ -82,6 +83,12 @@ while True:
     # Show the captured frame with object detection
     cv2.imshow('Screen Capture with Object Detection', frame)
 
+    # Move the mouse to the top-center of the capture area
+    mouse_x = left + capture_width // 2  # X-coordinate of top-center
+    mouse_y = top  # Y-coordinate is the top of the capture region
+    pyautogui.moveTo(mouse_x, mouse_y)
+
+    # Exit the loop when 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

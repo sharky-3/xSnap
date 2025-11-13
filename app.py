@@ -7,13 +7,28 @@ net = cv2.dnn.readNet("yolov3.weights", "yolov3.cfg")
 layer_names = net.getLayerNames()
 output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
 
-# Set up screen capture - adjust these values for a smaller capture
+# Set up screen capture
 sct = mss.mss()
-monitor = {
-    "top": 100,         # Starting from 100 pixels from the top
-    "left": 100,        # Starting from 100 pixels from the left
-    "width": 600,       # Width of the capture
-    "height": 400       # Height of the capture
+
+# Get the full screen resolution
+monitor = sct.monitors[1]  # Assuming the main monitor is the first one (index 1)
+screen_width = monitor["width"]
+screen_height = monitor["height"]
+
+# Define the capture region (centered 1280x720 area)
+capture_width = 1280
+capture_height = 720
+
+# Calculate the top-left corner to center the capture region
+top = (screen_height - capture_height) // 2
+left = (screen_width - capture_width) // 2
+
+# Set the capture area
+monitor_capture = {
+    "top": top,
+    "left": left,
+    "width": capture_width,
+    "height": capture_height
 }
 
 # Load class labels
@@ -21,8 +36,8 @@ with open("coco.names", "r") as f:
     classes = [line.strip() for line in f.readlines()]
 
 while True:
-    # Capture the smaller portion of the screen
-    img = sct.grab(monitor)
+    # Capture the specified portion of the screen (centered region)
+    img = sct.grab(monitor_capture)
     img_np = np.array(img)
     frame = cv2.cvtColor(img_np, cv2.COLOR_BGRA2BGR)
 
@@ -64,6 +79,7 @@ while True:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
             cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 2)
 
+    # Show the captured frame with object detection
     cv2.imshow('Screen Capture with Object Detection', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
